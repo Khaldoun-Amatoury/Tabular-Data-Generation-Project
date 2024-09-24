@@ -1,0 +1,34 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+ENV/
+env/
+
+# VSCode settings
+.vscode/
+
+# Python virtual environment and environment variable files
+*.env
+*.venv
+*.envrc
+.env.local
+
+# Log files
+*.log
+
+# macOS files
+.DS_Store
+
+# Python specific
+*.pyc
+*.pyo
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# pip dependency file lock
+pip-log.txt
