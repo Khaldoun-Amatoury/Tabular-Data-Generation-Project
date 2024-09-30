@@ -1,3 +1,4 @@
+"""
 import sdv
 
 
@@ -16,6 +17,7 @@ data, metadata = download_demo(
 
 print(data.head())
 print(metadata)
+"""
 # print(metadata.get_column_names(sdtype='numerical'))
 # print(metadata.validate())
 
@@ -30,10 +32,10 @@ print(metadata)
 # )
 
 
-print(metadata)
+# print(metadata)
 
-anonymized_metadata = metadata.anonymize()
-print(anonymized_metadata)
+# anonymized_metadata = metadata.anonymize()
+# print(anonymized_metadata)
 
 # metadata_vis = metadata.visualize(
 #     show_table_details='summarized',
@@ -45,9 +47,9 @@ print(anonymized_metadata)
 # metadata = SingleTableMetadata()
 # metadata_data = metadata.detect_from_dataframe(data)
 
-from sdv.single_table import GaussianCopulaSynthesizer
+# from sdv.single_table import GaussianCopulaSynthesizer
 
-synthesizer = GaussianCopulaSynthesizer(metadata)
+# synthesizer = GaussianCopulaSynthesizer(metadata)
 
 # synthesizer = GaussianCopulaSynthesizer(
 #     metadata, # required
@@ -59,7 +61,7 @@ synthesizer = GaussianCopulaSynthesizer(metadata)
 #     },
 #     default_distribution='norm'
 # )
-
+"""
 synthesizer.fit(data)
 
 synthetic_data = synthesizer.sample(num_rows=10)
@@ -68,7 +70,7 @@ print(synthetic_data)
 
 from sdv.single_table import CTGANSynthesizer
 
-# synthesizer = CTGANSynthesizer(metadata)
+synthesizer = CTGANSynthesizer(metadata)
 
 synthesizer = CTGANSynthesizer(
     metadata, # required
@@ -80,3 +82,18 @@ synthesizer = CTGANSynthesizer(
 synthesizer.fit(data)
 synthesizer.get_loss_values()
 synthetic_data = synthesizer.sample(num_rows=10)
+"""
+
+from models.models import setup, generate_copulagan_synthesizer
+from evaluation.evaluation import evaluate_data_quality, run_syntheval, quality_report_sdmetrics, run_diagnostic_sdv, get_column_plot
+
+data, metadata = setup()
+synthetic_data = generate_copulagan_synthesizer(data, metadata, num_rows=100, save_data=True)
+
+eval_report = run_diagnostic_sdv(real_data=data, synthetic_data=synthetic_data, metadata=metadata)
+# eval_report = evaluate_data_quality(real_data=data, synthetic_data=synthetic_data, metadata=metadata)
+# eval_report = run_syntheval(real_data=data, synthetic_data=synthetic_data, metadata=metadata)
+# eval_report = quality_report_sdmetrics(real_data=data, synthetic_data=synthetic_data, metadata=metadata)
+# eval_report = get_column_plot(real_data=data, synthetic_data=synthetic_data, metadata=metadata, column_name='employability_perc')
+# eval_report.show()
+print(eval_report)
