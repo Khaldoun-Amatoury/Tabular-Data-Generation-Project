@@ -2,9 +2,13 @@ from sdv.datasets.demo import get_available_demos, download_demo
 from sdv.single_table import GaussianCopulaSynthesizer, CTGANSynthesizer, TVAESynthesizer, CopulaGANSynthesizer
 import pandas as pd 
 import os 
-"""
+
+
+def get_available_datasets():
+    return get_available_demos(modality='single_table')
+
+
 def setup():
-    get_available_demos(modality='single_table')
 
     data, metadata = download_demo(
         modality='single_table',
@@ -12,12 +16,6 @@ def setup():
     )
 
     return (data, metadata)
-"""
-get_available_demos(modality='single_table')
-data, metadata = download_demo(
-        modality='single_table',
-        dataset_name='student_placements'
-)
 
 def generate_gaussian_copula_synthesizer(data, metadata, num_rows=10, save_data=False):
     synthesizer = GaussianCopulaSynthesizer(metadata)
@@ -76,4 +74,4 @@ def generate_data(model_name, data, metadata, num_rows=10, save_data=False):
 # data, metadata = setup()
 # print(generate_copulagan_synthesizer(data, metadata, num_rows=100, save_data=True))
 
-#print(    get_available_demos(modality='single_table'))
+#print(get_available_demos(modality='single_table'))
