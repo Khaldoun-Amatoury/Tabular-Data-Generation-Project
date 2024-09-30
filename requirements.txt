@@ -3,3 +3,5 @@ uvicorn
 sdv
 sdmetrics
 pandas
+docker
+syntheval
