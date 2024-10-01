@@ -13,6 +13,9 @@ class GenerateDataRequest(BaseModel):
     num_rows: int = 10
     save_data: bool = False
 
+class EvaluateRequest(BaseModel):
+    model_name: str
+    num_rows: int = 100
 
 @app.get("/available-datasets")
 async def available_datasets():
@@ -44,12 +47,11 @@ async def generate_synthetic_data(request: GenerateDataRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @app.post("/evaluate-quality")
-async def evaluate_quality():
+async def evaluate_quality(request: EvaluateRequest):
     try:
         data, metadata = setup()
-        synthetic_data = generate_data("gaussian_copula", data, metadata, num_rows=100) 
+        synthetic_data = generate_data(request.model_name, data, metadata, request.num_rows)
         quality_report = evaluate_data_quality(data, synthetic_data, metadata)
         return {"quality_report": quality_report}
     except Exception as e:
@@ -57,10 +59,10 @@ async def evaluate_quality():
 
 
 @app.post("/run-diagnostic")
-async def run_diagnostic_endpoint():
+async def run_diagnostic_endpoint(request: EvaluateRequest):
     try:
         data, metadata = setup()
-        synthetic_data = generate_data("gaussian_copula", data, metadata, num_rows=100) 
+        synthetic_data = generate_data(request.model_name, data, metadata, request.num_rows)
         diagnostic_report = run_diagnostic_sdv(data, synthetic_data, metadata)
         return {"diagnostic_report": diagnostic_report}
     except Exception as e:
@@ -68,10 +70,10 @@ async def run_diagnostic_endpoint():
 
 
 @app.get("/get-column-plot")
-async def get_column_plot_endpoint(column_name: str):
+async def get_column_plot_endpoint(column_name: str, model_name: str, num_rows: int = 100):
     try:
         data, metadata = setup()
-        synthetic_data = generate_data("gaussian_copula", data, metadata, num_rows=100) 
+        synthetic_data = generate_data(model_name, data, metadata, num_rows)
         fig = get_column_plot_sdv(data, synthetic_data, metadata, column_name)
 
         buffer = io.BytesIO()
@@ -83,10 +85,10 @@ async def get_column_plot_endpoint(column_name: str):
 
 
 @app.post("/run-syntheval")
-async def run_syntheval_endpoint():
+async def run_syntheval_endpoint(request: EvaluateRequest):
     try:
         data, metadata = setup()
-        synthetic_data = generate_data("gaussian_copula", data, metadata, num_rows=100)  
+        synthetic_data = generate_data(request.model_name, data, metadata, request.num_rows)
         score = run_syntheval(data, synthetic_data, metadata)
         return {"syntheval_score": score}
     except Exception as e:
@@ -94,15 +96,14 @@ async def run_syntheval_endpoint():
 
 
 @app.post("/quality-report")
-async def quality_report_endpoint():
+async def quality_report_endpoint(request: EvaluateRequest):
     try:
         data, metadata = setup()
-        synthetic_data = generate_data("gaussian_copula", data, metadata, num_rows=100)
+        synthetic_data = generate_data(request.model_name, data, metadata, request.num_rows)
         quality_report = quality_report_sdmetrics(data, synthetic_data, metadata)
         return {"quality_report_sdmetrics": quality_report}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
 
 if __name__ == "__main__":
     import uvicorn
