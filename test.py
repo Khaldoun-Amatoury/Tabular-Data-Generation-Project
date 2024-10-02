@@ -90,8 +90,8 @@ from evaluation.evaluation import evaluate_data_quality, run_syntheval, quality_
 data, metadata = setup()
 synthetic_data = generate_copulagan_synthesizer(data, metadata, num_rows=100, save_data=True)
 
-eval_report = run_diagnostic_sdv(real_data=data, synthetic_data=synthetic_data, metadata=metadata)
-# eval_report = evaluate_data_quality(real_data=data, synthetic_data=synthetic_data, metadata=metadata)
+# eval_report = run_diagnostic_sdv(real_data=data, synthetic_data=synthetic_data, metadata=metadata)
+eval_report = evaluate_data_quality(real_data=data, synthetic_data=synthetic_data, metadata=metadata)
 # eval_report = run_syntheval(real_data=data, synthetic_data=synthetic_data, metadata=metadata)
 # eval_report = quality_report_sdmetrics(real_data=data, synthetic_data=synthetic_data, metadata=metadata)
 # eval_report = get_column_plot(real_data=data, synthetic_data=synthetic_data, metadata=metadata, column_name='employability_perc')

@@ -1,107 +1,78 @@
 from fastapi import FastAPI, HTTPException
-from models.models import (get_available_datasets, setup, generate_data)
+from models.models import setup, generate_data
 from pydantic import BaseModel
-from fastapi.responses import StreamingResponse
-import io
+from fastapi.responses import JSONResponse
 import pandas as pd
-from evaluation.evaluation import (evaluate_data_quality, run_diagnostic_sdv, quality_report_sdmetrics, run_syntheval, get_column_plot_sdv)
+import os
+from datetime import datetime
+from evaluation.evaluation import (
+    evaluate_data_quality,
+    run_diagnostic_sdv,
+    quality_report_sdmetrics,
+    run_syntheval,
+    get_column_plot_sdv
+)
 
 app = FastAPI()
 
 class GenerateDataRequest(BaseModel):
     model_name: str
     num_rows: int = 10
-    save_data: bool = False
 
-class EvaluateRequest(BaseModel):
-    model_name: str
-    num_rows: int = 100
-
-@app.get("/available-datasets")
-async def available_datasets():
-    try:
-        datasets = get_available_datasets()
-        
-        if isinstance(datasets, pd.DataFrame):
-            datasets_json = datasets.to_dict(orient="records")
-        else:
-            datasets_json = [str(dataset) for dataset in datasets]  
-
-        return {"datasets": datasets_json}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+def get_latest_dataset():
+    datasets_folder = os.path.join(os.getcwd(), 'datasets')
+    files = os.listdir(datasets_folder)
+    if not files:
+        raise FileNotFoundError("No datasets found")
+    latest_file = max(files, key=lambda f: os.path.getctime(os.path.join(datasets_folder, f)))
+    return os.path.join(datasets_folder, latest_file)
 
 @app.post("/generate-data")
 async def generate_synthetic_data(request: GenerateDataRequest):
     try:
-        data, metadata = setup()  
-        synthetic_data = generate_data(request.model_name, data, metadata, request.num_rows, request.save_data)
+        data, metadata = setup()
+        synthetic_data = generate_data(request.model_name, data, metadata, request.num_rows, save_data=False)
 
-        buffer = io.StringIO()
-        synthetic_data.to_csv(buffer, index=False)
-        buffer.seek(0)
-        return StreamingResponse(buffer, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=synthetic_data.csv"})
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+        # Create filename with model name and timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{request.model_name}_{timestamp}.csv"
+        
+        # Save to datasets folder
+        save_path = os.path.join(os.getcwd(), 'datasets', filename)
+        synthetic_data.to_csv(save_path, index=False)
+
+        return JSONResponse(content={"message": f"Data generated and saved as {filename}"})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/evaluate-quality")
-async def evaluate_quality(request: EvaluateRequest):
+@app.post("/evaluate-latest")
+async def evaluate_latest_dataset():
     try:
+        # Get the latest dataset
+        latest_file_path = get_latest_dataset()
+        synthetic_data = pd.read_csv(latest_file_path)
+
+        # Get original data and metadata
         data, metadata = setup()
-        synthetic_data = generate_data(request.model_name, data, metadata, request.num_rows)
+
+        # Perform evaluations
         quality_report = evaluate_data_quality(data, synthetic_data, metadata)
-        return {"quality_report": quality_report}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/run-diagnostic")
-async def run_diagnostic_endpoint(request: EvaluateRequest):
-    try:
-        data, metadata = setup()
-        synthetic_data = generate_data(request.model_name, data, metadata, request.num_rows)
         diagnostic_report = run_diagnostic_sdv(data, synthetic_data, metadata)
-        return {"diagnostic_report": diagnostic_report}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        syntheval_score = run_syntheval(data, synthetic_data, metadata)
+        quality_report_sdm = quality_report_sdmetrics(data, synthetic_data, metadata)
 
+        # Prepare response
+        evaluation_results = {
+            "file_evaluated": os.path.basename(latest_file_path),
+            "quality_report": quality_report,
+            "diagnostic_report": diagnostic_report,
+            "syntheval_score": syntheval_score,
+            "quality_report_sdmetrics": quality_report_sdm
+        }
 
-@app.get("/get-column-plot")
-async def get_column_plot_endpoint(column_name: str, model_name: str, num_rows: int = 100):
-    try:
-        data, metadata = setup()
-        synthetic_data = generate_data(model_name, data, metadata, num_rows)
-        fig = get_column_plot_sdv(data, synthetic_data, metadata, column_name)
-
-        buffer = io.BytesIO()
-        fig.savefig(buffer, format='png')
-        buffer.seek(0)
-        return StreamingResponse(buffer, media_type="image/png", headers={"Content-Disposition": f"inline; filename={column_name}_plot.png"})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/run-syntheval")
-async def run_syntheval_endpoint(request: EvaluateRequest):
-    try:
-        data, metadata = setup()
-        synthetic_data = generate_data(request.model_name, data, metadata, request.num_rows)
-        score = run_syntheval(data, synthetic_data, metadata)
-        return {"syntheval_score": score}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/quality-report")
-async def quality_report_endpoint(request: EvaluateRequest):
-    try:
-        data, metadata = setup()
-        synthetic_data = generate_data(request.model_name, data, metadata, request.num_rows)
-        quality_report = quality_report_sdmetrics(data, synthetic_data, metadata)
-        return {"quality_report_sdmetrics": quality_report}
+        return JSONResponse(content=evaluation_results)
+    except FileNotFoundError as fnf:
+        raise HTTPException(status_code=404, detail=str(fnf))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

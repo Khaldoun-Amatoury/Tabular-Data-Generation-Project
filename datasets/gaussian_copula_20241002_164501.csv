@@ -1,0 +1,11 @@
+age,workclass,fnlwgt,education,education-num,marital-status,occupation,relationship,race,sex,capital-gain,capital-loss,hours-per-week,native-country,label
+58,Private,155504,HS-grad,10,Married-civ-spouse,Other-service,Husband,White,Male,30799,0,26,United-States,>50K
+30,Local-gov,334589,Bachelors,11,Married-civ-spouse,Prof-specialty,Husband,White,Male,37400,0,25,United-States,<=50K
+23,Private,100675,HS-grad,10,Married-civ-spouse,Craft-repair,Wife,White,Female,45791,0,35,United-States,<=50K
+45,Private,127020,HS-grad,14,Divorced,Other-service,Husband,White,Male,15383,8,34,United-States,<=50K
+57,Private,258630,HS-grad,8,Married-civ-spouse,Handlers-cleaners,Husband,Black,Male,51665,36,41,Vietnam,<=50K
+28,Local-gov,63068,Some-college,14,Never-married,Prof-specialty,Husband,White,Male,21873,278,49,Germany,>50K
+48,Private,138658,Assoc-acdm,7,Married-civ-spouse,Exec-managerial,Husband,White,Male,99438,0,24,United-States,<=50K
+19,Private,173344,Bachelors,12,Never-married,?,Not-in-family,White,Male,98819,0,35,United-States,<=50K
+29,Private,176678,HS-grad,14,Divorced,Prof-specialty,Husband,White,Male,99461,0,66,United-States,<=50K
+28,Private,277739,Prof-school,6,Married-civ-spouse,Exec-managerial,Husband,White,Female,9406,425,45,United-States,<=50K

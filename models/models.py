@@ -12,7 +12,7 @@ def setup():
 
     data, metadata = download_demo(
         modality='single_table',
-        dataset_name='student_placements'
+        dataset_name='adult'
     )
 
     return (data, metadata)
