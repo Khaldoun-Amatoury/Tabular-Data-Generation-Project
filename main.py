@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from models.models import setup, generate_data
+from models.models import setup, generate_data, get_available_model_names
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 import pandas as pd
@@ -19,6 +19,7 @@ class GenerateDataRequest(BaseModel):
     model_name: str
     num_rows: int = 10
 
+@app.get('/get-latest-dataset')
 def get_latest_dataset():
     datasets_folder = os.path.join(os.getcwd(), 'datasets')
     files = os.listdir(datasets_folder)
@@ -26,6 +27,10 @@ def get_latest_dataset():
         raise FileNotFoundError("No datasets found")
     latest_file = max(files, key=lambda f: os.path.getctime(os.path.join(datasets_folder, f)))
     return os.path.join(datasets_folder, latest_file)
+
+@app.get('/available-model-names')
+def get_available_models():
+    return get_available_model_names()
 
 @app.post("/generate-data")
 async def generate_synthetic_data(request: GenerateDataRequest):

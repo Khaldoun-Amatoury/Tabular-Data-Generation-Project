@@ -5,3 +5,9 @@ sdmetrics
 pandas
 docker
 syntheval
+numpy
+torch
+scikit-learn
+dython
+scipy
+be-great
